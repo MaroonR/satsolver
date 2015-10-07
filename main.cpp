@@ -8,10 +8,12 @@
 #include <string>
 #include <ctime>
 #include <cstdlib>
+#include <cmath>
 
 using namespace std;
 
 double genetic(vector<vector<int>>, int);
+bool getSat(vector<vector<int>>, vector<vector<bool>>);
 
 int main(){
 
@@ -59,6 +61,33 @@ int main(){
   genetic(clauses, var_count);
 }
 
+bool getSat(vector<int> clause, vector<bool> candidate){
+  // need to extract values from candidate at positions denoted by clause
+  // also need to figure out correct logic statement based on negatives
+
+  int pos1 = clause[0];
+  int pos2 = clause[1];
+  int pos3 = clause[2];
+
+  bool vX = candidate[abs(pos1)];
+  bool vY = candidate[abs(pos2)];
+  bool vZ = candidate[abs(pos3)];
+
+  if(pos1 < 0){
+    vX = !vX;
+  }
+  if(pos2 < 0){
+    vY = !vY;
+  }
+  if(pos3 < 0){
+    vZ = !vZ;
+  }
+
+  bool result = vX && vY && vZ;
+
+  return result;
+}
+
 double genetic(vector<vector<int>> cl, int vars){
 
   // create a random sampling of candidate solutions
@@ -83,21 +112,47 @@ double genetic(vector<vector<int>> cl, int vars){
     candidate.clear();
   }
   // send our candidates off to prove themselves, track scores
+
+
+  /*THIS SECTION STILL NEEDS WORK!!!*/
   cout << "Rating Candidates... " << endl;
   for(int i = 0; i < 200; i++){
     for(int j = 0; j < 40; j++){
-      for(int k = 0; k < 3; k++){
-        cout << i << endl;
-        cout << j << endl;
-        cout << k << endl;
-        cout << "next" << endl;
-        if(candidates[i][cl[j][k]] == 1){
-          scores[i] = scores[i] + 1;
-        }
-        else{
-          scores[i] = scores[i];
-        }
+      if(getSat(cl[j], candidates[i]) == 1){
+        scores[i] = scores[i] + 1;
+      }
+      else{
+        scores[i] = scores[i];
       }
     }
+    if(score[i] == 40){
+      cout << "found a solution" << endl;
+
+    }
   }
+
+  // find the top quartile of our scores....
+  double top_q = 0;
+  for(int i = 0; i < 200; i++){
+    if(scores[i] > top_q){
+      top_q = scores[i];
+    }
+  }
+  top_q = (3 * top_q)/4;
+
+  // let natural selection run its course
+  vector<int> ns;
+  for(int i = 0; i < 200; i++){
+    if(scores[i] < top_q){
+      ns.push_back(i);
+    }
+  }
+  for(int i = 0; i < ns.size(); i++){
+    scores[ns[i]] = -999;
+    candidates[ns[i]].clear();
+  }
+
+  // mutate the top candidates
+
+
 }
