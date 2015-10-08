@@ -1,0 +1,203 @@
+#!/usr/bin/python3
+
+#open file and read data into a list
+import os
+import random
+import sys
+sys.setrecursionlimit(2000)
+fn = os.path.join(os.path.dirname(__file__), 'tests/10.40.160707067.cnf')
+
+with open(fn) as f:
+    lines = f.readlines()
+
+clauses = []
+clause = []
+var_count = 0
+clause_count = 0
+x = 0
+varflag = 0
+token = ""
+token2 = ""
+
+
+for i in lines:
+    if(i[0] == 'c' or i[0] == 'p'):
+        if(i[0] == 'p'):
+            for j in i:
+                if(j == ' '):
+                    varflag+=1
+                elif(varflag >= 2 and varflag < 3):
+                    print("2")
+                    token+=(j)
+                elif(varflag >= 3 and j != '\n'):
+                    token2+=(j)
+            var_count = int(token)
+            clause_count = int(token2)
+    else:
+        for j in i:
+            if(j == '-'):
+                negflag = 1;
+            elif(j == ' 'or j == '\n'):
+                continue
+            else:
+                if(negflag == 1):
+                    x = int(j)
+                    clause.append(-x)
+                    negflag = 0
+                else:
+                    clause.append(int(j))
+
+        clauses.append(clause);
+        clause = []
+
+for i in clauses:
+    print(i)
+
+print("Number of variables: " + str(var_count))
+print("Number of clauses: " + str(clause_count))
+
+f.close()
+
+def createCandidate(var_count):
+    result = []
+    for i in range(0, var_count):
+        result.append(random.randrange(2))
+    return result
+
+def checkSat(candidate, clause):
+    """this function checks for satisfiablity of a single CNF"""
+
+    var1 = clause[0];
+    var2 = clause[1];
+    var3 = clause[2];
+
+    vX = candidate[abs(var1)]
+    vY = candidate[abs(var2)]
+    vZ = candidate[abs(var3)]
+
+    if(var1 < 0):
+        vX = not vX
+    if(var2 < 0):
+        vY = not vY
+    if(var3 < 0):
+        vZ = not vZ
+
+    return (vX and vY and vZ)
+
+def satScore(candidate, clauses):
+    result = []
+    for i in clauses:
+        if(checkSat(candidate, i) == 1):
+            result.append(1)
+        else:
+            result.append(0)
+    return result
+
+def walksat(var_count, clause_count, clauses, candidate, depth, best):
+    """This function implements the walksat algorithm on the
+    given sat problem"""
+    print("Starting with new candidate: " + str(candidate) + " " + str(sum(satScore(candidate, clauses))))
+    if(sum(satScore(candidate, clauses)) == clause_count):
+        #base case
+        print("Solution satisfies all CNF's")
+        for i in candidate:
+            print(i, end="")
+        return candidate
+
+    if(depth > 1500):
+        #base case #2
+        print("walksat not finding a solution... :(")
+        print(depth)
+        print("best solution satisfied: " + str(best))
+        return -1
+    #test candidate against clauses:
+    score = 0
+    satfd = satScore(candidate, clauses)
+
+    ## choose a failed cnf at random
+    choices = []
+    count = 0;
+    # get our choices
+    for i in satfd:
+        if(i == 0):
+            choices.append(count)
+        count+=1
+    # choose a random choice
+    choice = random.randrange(len(choices))
+
+    # choices[choice] == our chosen cnf
+
+    # we now need to pick a variable from our chosen cnf that will
+    # yield the smallest number of cnfs that move from sat'd to unsat'd
+    tc1 = candidate[:]
+    tc2 = candidate[:]
+    tc3 = candidate[:]
+
+    var1 = clauses[choices[choice]][0]
+    var2 = clauses[choices[choice]][1]
+    var3 = clauses[choices[choice]][2]
+
+    tc1[var1] = not tc1[var1]
+    tc2[var2] = not tc2[var2]
+    tc3[var3] = not tc3[var3]
+
+    score1 = satScore(tc1, clauses)
+    print("Option 1: " + str(score1) + " " + str(sum(score1)))
+    score2 = satScore(tc2, clauses)
+    print("Option 2: " + str(score2) + " " + str(sum(score2)))
+    score3 = satScore(tc3, clauses)
+    print("Option 3: " + str(score3) + " " + str(sum(score3)))
+
+
+    # score1-3 holds the passed cnfs for each test candidate. sum(score#) holds the heuristic score
+    # Now lets choose the largest of these and let it reiterate through the function again
+
+    if(score1 > score2):
+        if(sum(score1) > sum(score3)):
+            curr_best = sum(score1)
+            if(curr_best > best):
+                best = curr_best
+            print("Candidate: " + str(tc1))
+            print("Candidate Score: " + str(sum(score1)))
+            current_candidate = walksat(var_count, clause_count, clauses, tc1[:], depth+1, best)
+        elif(sum(score3) > sum(score1)):
+            curr_best = sum(score3)
+            if(curr_best > best):
+                best = curr_best
+            print("Candidate: " + str(tc3))
+            print("Candidate Score: " + str(sum(score3)))
+            current_candidate = walksat(var_count, clause_count, clauses, tc3[:], depth+1, best)
+        elif(sum(score3) <= sum(score1)):
+            curr_best = sum(score1)
+            if(curr_best > best):
+                best = curr_best
+            print("Candidate Score: " + str(sum(score1)))
+            current_candidate = walksat(var_count, clause_count, clauses, tc1[:], depth+1, best)
+    else:
+        if(sum(score2) > sum(score3)):
+            curr_best = sum(score2)
+            if(curr_best > best):
+                best = curr_best
+            print("Candidate: " + str(tc2))
+            print("Candidate Score: " + str(sum(score2)))
+            current_candidate = walksat(var_count, clause_count, clauses, tc2[:], depth+1, best)
+        elif(sum(score2) >= sum(score3)):
+            curr_best = sum(score2)
+            if(curr_best > best):
+                best = curr_best
+            print("Candidate: " + str(tc2))
+            print("Candidate Score: " + str(sum(score2)))
+            current_candidate = walksat(var_count, clause_count, clauses, tc2[:], depth+1, best)
+        else:
+            curr_best = sum(score3)
+            if(curr_best > best):
+                best = curr_best
+            print("Candidate: " + str(tc3))
+            print("Candidate Score: " + str(sum(score3)))
+            current_candidate = walksat(var_count, clause_count, clauses, tc3[:], depth+1, best)
+
+    return current_candidate
+
+
+
+walksat(var_count, clause_count, clauses, createCandidate(var_count), 0, 0)
