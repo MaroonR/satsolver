@@ -200,11 +200,22 @@ def walksat(var_count, clause_count, clauses, candidate, depth, best):
 
 def genetic(var_count, clause_count, clauses):
 
+    def mutate(candidate):
+        #select a random variable and flip it?
+        mutated_candidate = list(candidate)
+        mutate_pos = random.randrange(10)
+        print(mutate_pos)
+        print(len(mutated_candidate))
+        mutated_candidate[mutate_pos] = not mutated_candidate[mutate_pos]
+        return mutated_candidate
+
+
     POOL_SIZE = 200
     candidates = []
     scores = []
 
     # create a pool of candidates
+    # create scoreboard for candidates
     for i in range(POOL_SIZE):
         candidate = createCandidate(var_count)
         candidates.append(candidate)
@@ -214,9 +225,52 @@ def genetic(var_count, clause_count, clauses):
         print(str(candidates[i]), end=' ')
         print(str(scores[i]))
 
+    while(1):
+        #find the 90th percentile and cull the result
+        scores_sorted = sorted(scores[:])
+        # 90th percentile of POOL_SIZE = len(poolsize) * 9/10
+        wall = scores_sorted[round(len(scores_sorted) * 9/10)]
+        ns = []
+        for i in range(POOL_SIZE):
+            if (scores[i] < wall):
+                ns.append(i)
+        ns_sorted = sorted(ns, reverse=True)
+        #let natural selection do its work
+        for i in ns_sorted:
+            del scores[i]
+            del candidates[i]
+
+        len(candidates)
+        while(len(candidates) != POOL_SIZE):
+            candidate_to_be_mutated = random.randrange(len(candidates))
+            mutated_candidate = mutate(candidates[candidate_to_be_mutated])
+            candidates.append(mutated_candidate)
+            scores.append(sum(satScore(mutated_candidate, clauses)))
+
+        for i in range(POOL_SIZE):
+            print(str(candidates[i]), end=' ')
+            print(str(scores[i]))
+            if(scores[i] == 40):
+                #found a winning candidate
+                print("Winning Candidate")
+                print(candidates[i], end= ' ')
+                print(scores[i])
+                return
 
 
 
-walksat(var_count, clause_count, clauses, createCandidate(var_count), 0, 0)
 
-#genetic(var_count, clause_count, clauses)
+
+
+
+
+
+
+
+
+
+
+
+#walksat(var_count, clause_count, clauses, createCandidate(var_count), 0, 0)
+
+genetic(var_count, clause_count, clauses)
