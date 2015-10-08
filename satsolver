@@ -4,7 +4,7 @@
 import os
 import random
 import sys
-sys.setrecursionlimit(2000)
+sys.setrecursionlimit(3000)
 fn = os.path.join(os.path.dirname(__file__), 'tests/10.40.160707067.cnf')
 
 with open(fn) as f:
@@ -82,7 +82,7 @@ def checkSat(candidate, clause):
     if(var3 < 0):
         vZ = not vZ
 
-    return (vX and vY and vZ)
+    return (vX | vY | vZ)
 
 def satScore(candidate, clauses):
     result = []
@@ -104,7 +104,7 @@ def walksat(var_count, clause_count, clauses, candidate, depth, best):
             print(i, end="")
         return candidate
 
-    if(depth > 1500):
+    if(depth > 2500):
         #base case #2
         print("walksat not finding a solution... :(")
         print(depth)
@@ -198,6 +198,25 @@ def walksat(var_count, clause_count, clauses, candidate, depth, best):
 
     return current_candidate
 
+def genetic(var_count, clause_count, clauses):
+
+    POOL_SIZE = 200
+    candidates = []
+    scores = []
+
+    # create a pool of candidates
+    for i in range(POOL_SIZE):
+        candidate = createCandidate(var_count)
+        candidates.append(candidate)
+        scores.append(sum(satScore(candidate, clauses)))
+
+    for i in range(POOL_SIZE):
+        print(str(candidates[i]), end=' ')
+        print(str(scores[i]))
+
+
 
 
 walksat(var_count, clause_count, clauses, createCandidate(var_count), 0, 0)
+
+#genetic(var_count, clause_count, clauses)
