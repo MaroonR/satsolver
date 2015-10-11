@@ -1,0 +1,12 @@
+#!/usr/bin/bash
+
+shopt -s nullglob
+array=( *.cnf )
+for i in "${array[@]}"
+do
+    satsolver $i >> data_genetic.txt
+done
+
+
+
+
