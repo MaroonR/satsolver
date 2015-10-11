@@ -4,7 +4,7 @@ shopt -s nullglob
 array=( *.cnf )
 for i in "${array[@]}"
 do
-    satsolver $i >> data_genetic.txt
+    satsolver $i >> data_walksat.txt
 done
 
 

@@ -302,7 +302,7 @@ def local(var_count, clause_count, clauses):
         if(sum(satScore(candidate, clauses)) == len(clauses)):
           #  print("Found Solution: " + str(candidate))
             return str(sum(satScore(candidate, clauses)))
-        if(time.time() - start_time > 10):
+        if(time.time() - start_time > 7):
            # print("Couldn't find solution!")
            # print("Best score: " + str(sum(satScore(candidate, clauses))))
             return str(sum(satScore(candidate, clauses)))
@@ -316,7 +316,7 @@ def local(var_count, clause_count, clauses):
 
 start_time = time.time()
 # a = walksat(var_count, clause_count, clauses, createCandidate(var_count), 0, 0)
-a = genetic(var_count, clause_count, clauses)
-# a = local(var_count, clause_count, clauses)
+# a = genetic(var_count, clause_count, clauses)
+a = local(var_count, clause_count, clauses)
 print (a, end='\t')
 print(time.time() - start_time)
